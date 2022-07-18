@@ -14,6 +14,7 @@ const socket = io("http://localhost:9000/");
 
 function App() {
   const [roomId, setRoomId] = useState("");
+  const [a, setA] = useState("a");
   const [joinedRoom, setJoinedRoom] = useState(false);
   const [diceValue, setDiceValue] = useState(0);
 
