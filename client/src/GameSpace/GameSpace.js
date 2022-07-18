@@ -86,6 +86,15 @@ const GameSpace = (props) => {
                               }}
                             ></div>
                           ) : null}
+                          {Cell.id===100 && Cell.player.length===1? (
+                            (props.userActive?(
+                              window.confirm("You Won")? window.location.reload():null
+                            ):(
+                              window.confirm("Opponent Won")? window.location.reload():null
+                            ))
+                          ):(
+                            null
+                          )}
                         </div>
                       </div>
                     );
