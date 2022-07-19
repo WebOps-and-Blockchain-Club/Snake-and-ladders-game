@@ -501,3 +501,4 @@ export const LadderAndSnakes = [
 ];
 export const ExtraMove = [6];
 export const NonExtraMove = [1, 2, 3, 4, 5];
+export const endval=[100];
