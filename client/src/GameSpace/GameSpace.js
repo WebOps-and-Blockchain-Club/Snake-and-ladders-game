@@ -24,30 +24,27 @@ const GameSpace = (props) => {
       ) : (
         <div style={{ display: "flex" }}>
           <div>
-              <Dice diceValue={props.diceValue} />
-          {props.userActive ? (
-            
+            {props.ended ? null : <Dice diceValue={props.diceValue} />}
+            {props.userActive ? (
               <button
                 className="btn btn-info mx-2 my-3"
                 onClick={() => {
                   let dice = props.diceRoll();
                   props.setDiceValue(dice);
                   props.UpdateBoard(dice);
-                }
-                  
-              }
+                }}
               >
                 Roll
               </button>
-          ) : (
-            <div className="mt-3">
-              <div
-                className="loader"
-                style={{ width: "20px", height: "20px" }}
-              ></div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="mt-3">
+                <div
+                  className="loader"
+                  style={{ width: "20px", height: "20px" }}
+                ></div>
+              </div>
+            )}
+          </div>
           <div>
             {props.BoardCell.map((BoardRow, index) => {
               return (
@@ -82,7 +79,10 @@ const GameSpace = (props) => {
                                 width: "30px",
                                 height: "30px",
                                 borderRadius: "50%",
-                                backgroundColor: colorCode[Cell.player[Cell.player.length - 1] - 1],
+                                backgroundColor:
+                                  colorCode[
+                                    Cell.player[Cell.player.length - 1] - 1
+                                  ],
                               }}
                             ></div>
                           ) : null}
@@ -101,5 +101,3 @@ const GameSpace = (props) => {
 };
 
 export default GameSpace;
-
- 
