@@ -6,7 +6,12 @@ import { useState, useEffect } from "react";
 //Importing components
 import Room from "./Room/Room";
 import GameSpace from "./GameSpace/GameSpace";
-import { BoardCell, ExtraMove, LadderAndSnakes, NonExtraMove } from "./shared/data";
+import {
+  BoardCell,
+  ExtraMove,
+  LadderAndSnakes,
+  NonExtraMove,
+} from "./shared/data";
 
 //Importing sockets using socket.io
 const { io } = require("socket.io-client");
@@ -22,6 +27,8 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [boardCell, setBoardCell] = useState(BoardCell);
   const [userValue, setUserValue] = useState(1);
+  const [gameStatus, setGameStatus] = useState(false);
+  const [win, setWin] = useState(false);
 
   const diceRoll = () => Math.floor(Math.random() * 6) + 1;
 
@@ -37,73 +44,87 @@ function App() {
       finalScore = finalMove.move;
     }
 
-    // console.log(finalScore);
+    if (finalScore <= 100) {
+      // console.log(finalScore);
 
-    if (userActive) {
-      let score = userValue;
+      if (userActive) {
+        let score = userValue;
 
-      if (score % 10 === 0) {
-        score--;
-      }
+        if (score % 10 === 0) {
+          score--;
+        }
 
-      let position = newBoard.length - (Math.floor(score / 10)) - 1;
+        let position = newBoard.length - Math.floor(score / 10) - 1;
 
-      // console.log(newBoard[position]);
+        // console.log(newBoard[position]);
 
-      newBoard[position].find((cell) => cell.id === userValue).player =
-      newBoard[position].find((cell) => cell.id === userValue).player.filter(
-        (num) => num !== playerNumber
-      );
+        newBoard[position].find((cell) => cell.id === userValue).player =
+          newBoard[position]
+            .find((cell) => cell.id === userValue)
+            .player.filter((num) => num !== playerNumber);
 
-      setUserValue(finalScore);
+        setUserValue(finalScore);
 
-      let Score = finalScore;
+        let Score = finalScore;
+        console.log(finalScore);
+        if (finalScore == 100) {
+          setGameStatus(true);
+          setWin(true);
+        }
 
-      if (Score % 10 === 0) {
-        Score--;
-      }
+        if (Score % 10 === 0) {
+          Score--;
+        }
 
-      let Position = newBoard.length - (Math.floor(Score / 10)) - 1;
+        let Position = newBoard.length - Math.floor(Score / 10) - 1;
 
-      // console.log(newBoard[position]);
+        // console.log(newBoard[position]);
 
-      newBoard[Position].find((cell) => cell.id === finalScore).player.push(playerNumber);
-      
-
-      setBoardCell(newBoard);
-      if (NonExtraMove.includes(diceValue)){
-        setUserActive(false);
-      }
-
-      if (ExtraMove.includes(diceValue)){
-        setUserActive(true);
-      }
-
-      if (socket) {
-        socket.emit("update_game", {
-          newBoard,
-          diceroll : diceValue,
-        });
+        newBoard[Position].find((cell) => cell.id === finalScore).player.push(
+          playerNumber
+        );
       }
     }
 
+    setBoardCell(newBoard);
+    if (NonExtraMove.includes(diceValue)) {
+      setUserActive(false);
+    }
 
+    if (ExtraMove.includes(diceValue)) {
+      setUserActive(true);
+    }
+
+    if (socket) {
+      socket.emit("update_game", {
+        newBoard,
+        diceroll: diceValue,
+        finalScore,
+        playerNumber,
+        win,
+      });
+    }
   };
 
   const handleGameUpdate = () => {
     if (socket) {
       socket.on("on_game_update", (data) => {
+        console.log(data);
         setBoardCell(data.newBoard);
 
-      if (ExtraMove.includes(data.diceroll)){
-        setUserActive(false);
-      }
+        if (ExtraMove.includes(data.diceroll)) {
+          setUserActive(false);
+        }
 
-      if (NonExtraMove.includes(data.diceroll)){
-        setUserActive(true);
-      }
+        if (NonExtraMove.includes(data.diceroll)) {
+          setUserActive(true);
+        }
 
-      })
+        if (data.finalScore == 100) {
+          setGameStatus(true);
+          console.log(data.playerNumber);
+        }
+      });
     }
   };
 
@@ -142,7 +163,8 @@ function App() {
           gameStarted={gameStarted}
           userActive={userActive}
           UpdateBoard={UpdateBoard}
-
+          gameStatus={gameStatus}
+          win={win}
         />
       ) : (
         <Room
