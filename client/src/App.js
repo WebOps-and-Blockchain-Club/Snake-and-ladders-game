@@ -6,7 +6,12 @@ import { useState, useEffect } from "react";
 //Importing components
 import Room from "./Room/Room";
 import GameSpace from "./GameSpace/GameSpace";
-import { BoardCell, ExtraMove, LadderAndSnakes, NonExtraMove } from "./shared/data";
+import {
+  BoardCell,
+  ExtraMove,
+  LadderAndSnakes,
+  NonExtraMove,
+} from "./shared/data";
 
 //Importing sockets using socket.io
 const { io } = require("socket.io-client");
@@ -22,13 +27,18 @@ function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [boardCell, setBoardCell] = useState(BoardCell);
   const [userValue, setUserValue] = useState(1);
+  const [ended, setEnded] = useState(false);
+  var end = false;
 
   const diceRoll = () => Math.floor(Math.random() * 6) + 1;
 
   const UpdateBoard = (diceValue) => {
     const newBoard = [...boardCell];
 
-    let finalScore = userValue + diceValue;
+    let finalScore = userValue;
+    if (userValue + diceValue <= 100) {
+      finalScore = userValue + diceValue;
+    }
 
     let finalMove = LadderAndSnakes.find((key) => key.cell === finalScore);
 
@@ -37,8 +47,6 @@ function App() {
       finalScore = finalMove.move;
     }
 
-    // console.log(finalScore);
-
     if (userActive) {
       let score = userValue;
 
@@ -46,14 +54,14 @@ function App() {
         score--;
       }
 
-      let position = newBoard.length - (Math.floor(score / 10)) - 1;
+      let position = newBoard.length - Math.floor(score / 10) - 1;
 
       // console.log(newBoard[position]);
 
       newBoard[position].find((cell) => cell.id === userValue).player =
-      newBoard[position].find((cell) => cell.id === userValue).player.filter(
-        (num) => num !== playerNumber
-      );
+        newBoard[position]
+          .find((cell) => cell.id === userValue)
+          .player.filter((num) => num !== playerNumber);
 
       setUserValue(finalScore);
 
@@ -63,31 +71,37 @@ function App() {
         Score--;
       }
 
-      let Position = newBoard.length - (Math.floor(Score / 10)) - 1;
+      let Position = newBoard.length - Math.floor(Score / 10) - 1;
 
       // console.log(newBoard[position]);
 
-      newBoard[Position].find((cell) => cell.id === finalScore).player.push(playerNumber);
-      
+      newBoard[Position].find((cell) => cell.id === finalScore).player.push(
+        playerNumber
+      );
 
       setBoardCell(newBoard);
-      if (NonExtraMove.includes(diceValue)){
+      if (NonExtraMove.includes(diceValue)) {
         setUserActive(false);
       }
 
-      if (ExtraMove.includes(diceValue)){
+      if (ExtraMove.includes(diceValue)) {
         setUserActive(true);
+      }
+
+      if (finalScore === 100) {
+        end = true;
+        setEnded(true);
+        alert("You win!");
       }
 
       if (socket) {
         socket.emit("update_game", {
           newBoard,
-          diceroll : diceValue,
+          diceroll: diceValue,
+          end,
         });
       }
     }
-
-
   };
 
   const handleGameUpdate = () => {
@@ -95,15 +109,20 @@ function App() {
       socket.on("on_game_update", (data) => {
         setBoardCell(data.newBoard);
 
-      if (ExtraMove.includes(data.diceroll)){
-        setUserActive(false);
-      }
+        if (ExtraMove.includes(data.diceroll)) {
+          setUserActive(false);
+        }
 
-      if (NonExtraMove.includes(data.diceroll)){
-        setUserActive(true);
-      }
+        if (NonExtraMove.includes(data.diceroll)) {
+          setUserActive(true);
+        }
 
-      })
+        if (data.end) {
+          setEnded(true);
+          end = true;
+          alert("Your opponent wins!");
+        }
+      });
     }
   };
 
@@ -132,7 +151,7 @@ function App() {
 
   return (
     <>
-      {joinedRoom ? (
+      {joinedRoom && !ended ? (
         <GameSpace
           BoardCell={boardCell}
           diceValue={diceValue}
@@ -142,7 +161,7 @@ function App() {
           gameStarted={gameStarted}
           userActive={userActive}
           UpdateBoard={UpdateBoard}
-
+          ended={ended}
         />
       ) : (
         <Room
